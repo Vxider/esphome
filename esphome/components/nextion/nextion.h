@@ -433,6 +433,8 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
 
   public:
   uint8_t page_id;
+  uint32_t val;
+};
 
 class MultiNextionTouchComponent : public sensor::Sensor{
  public:

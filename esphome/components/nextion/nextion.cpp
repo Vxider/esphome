@@ -236,6 +236,15 @@ bool Nextion::read_until_ack_() {
       }
       case 0x70:  // string variable data return
       case 0x71:  // numeric variable data return
+      {
+        if (data_length != 4) {
+          invalid_data_length = true;
+          break;
+        }
+        val = (uint32_t(data[3]) << 24) | (uint32_t(data[2]) << 16) | (uint16_t(data[1]) << 8) | data[0];
+        ESP_LOGD(TAG, "Got numeric value = %d", val);
+        break;
+      }
       case 0x86:  // device automatically enters into sleep mode
       case 0x87:  // device automatically wakes up
       case 0x88:  // system successful start up
