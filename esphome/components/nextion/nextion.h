@@ -4,6 +4,7 @@
 #include "esphome/core/defines.h"
 #include "esphome/components/uart/uart.h"
 #include "esphome/components/binary_sensor/binary_sensor.h"
+#include "esphome/components/sensor/sensor.h"
 
 #ifdef USE_TIME
 #include "esphome/components/time/real_time_clock.h"
@@ -13,6 +14,7 @@ namespace esphome {
 namespace nextion {
 
 class NextionTouchComponent;
+class MultiNextionTouchComponent;
 class Nextion;
 
 using nextion_writer_t = std::function<void(Nextion &)>;
@@ -364,6 +366,7 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
   // ========== INTERNAL METHODS ==========
   // (In most use cases you won't need these)
   void register_touch_component(NextionTouchComponent *obj) { this->touch_.push_back(obj); }
+  void register_multi_touch_component(MultiNextionTouchComponent *obj) { this->multi_touch_ = obj; }
   void setup() override;
   void set_brightness(float brightness) { this->brightness_ = brightness; }
   float get_setup_priority() const override;
@@ -391,11 +394,21 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
   bool read_until_ack_();
 
   std::vector<NextionTouchComponent *> touch_;
+  MultiNextionTouchComponent *multi_touch_;
   optional<nextion_writer_t> writer_;
   bool wait_for_ack_{true};
   float brightness_{1.0};
+
   public:
   uint8_t page_id;
+
+class MultiNextionTouchComponent : public sensor::Sensor{
+ public:
+  void set_page_id(uint8_t page_id) { page_id_ = page_id; }
+  void process(uint8_t page_id, uint8_t component_id, bool on);
+
+ protected:
+  uint8_t page_id_;
 };
 
 class NextionTouchComponent : public binary_sensor::BinarySensorInitiallyOff {

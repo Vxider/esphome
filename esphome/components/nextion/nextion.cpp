@@ -207,6 +207,7 @@ bool Nextion::read_until_ack_() {
         uint8_t touch_event = data[2];  // 0 -> release, 1 -> press
         ESP_LOGD(TAG, "Got touch page=%u component=%u type=%s", page_id, component_id,
                  touch_event ? "PRESS" : "RELEASE");
+        multi_touch_->process(page_id, component_id, touch_event);
         for (auto *touch : this->touch_) {
           touch->process(page_id, component_id, touch_event);
         }
@@ -283,6 +284,15 @@ void Nextion::set_component_text_printf(const char *component, const char *forma
     this->set_component_text(component, buffer);
 }
 void Nextion::set_wait_for_ack(bool wait_for_ack) { this->wait_for_ack_ = wait_for_ack; }
+
+void MultiNextionTouchComponent::process(uint8_t page_id, uint8_t component_id, bool on) {
+  if (this->page_id_ == page_id) {
+    if (on)
+      this->publish_state(0);
+    else
+      this->publish_state(component_id);
+  }
+}
 
 void NextionTouchComponent::process(uint8_t page_id, uint8_t component_id, bool on) {
   if (this->page_id_ == page_id && this->component_id_ == component_id) {
