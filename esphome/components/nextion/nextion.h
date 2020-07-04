@@ -394,6 +394,8 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
   optional<nextion_writer_t> writer_;
   bool wait_for_ack_{true};
   float brightness_{1.0};
+  public:
+  uint8_t page_id;
 };
 
 class NextionTouchComponent : public binary_sensor::BinarySensorInitiallyOff {

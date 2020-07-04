@@ -224,7 +224,15 @@ bool Nextion::read_until_ack_() {
         ESP_LOGD(TAG, "Got touch at x=%u y=%u type=%s", x, y, touch_event ? "PRESS" : "RELEASE");
         break;
       }
-      case 0x66:  // sendme page id
+      case 0x66: { // sendme page id
+        if (data_length != 1) {
+          invalid_data_length = true;
+          break;
+        }
+        page_id = data[0];
+        ESP_LOGD(TAG, "Got page id = %d", page_id);
+        break;
+      }
       case 0x70:  // string variable data return
       case 0x71:  // numeric variable data return
       case 0x86:  // device automatically enters into sleep mode
