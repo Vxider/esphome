@@ -4,6 +4,7 @@
 #include "esphome/core/defines.h"
 #include "esphome/components/uart/uart.h"
 #include "esphome/components/binary_sensor/binary_sensor.h"
+#include "esphome/components/sensor/sensor.h"
 
 #ifdef USE_TIME
 #include "esphome/components/time/real_time_clock.h"
@@ -13,6 +14,7 @@ namespace esphome {
 namespace nextion {
 
 class NextionTouchComponent;
+class MultiNextionTouchComponent;
 class Nextion;
 
 using nextion_writer_t = std::function<void(Nextion &)>;
@@ -360,10 +362,43 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    * `thup`.
    */
   void set_touch_sleep_timeout(uint16_t timeout);
+  /**
+   * Sets which page Nextion loads when exiting sleep mode. Note this can be set even when Nextion is in sleep mode.
+   * @param page_id The page id, from 0 to the lage page in Nextion. Set 255 (not set to any existing page) to
+   * wakes up to current page.
+   *
+   * Example:
+   * ```cpp
+   * it.set_wake_up_page(2);
+   * ```
+   *
+   * The display will wake up to page 2.
+   */
+  void set_wake_up_page(uint8_t page_id = 255);
+  /**
+   * Sets if Nextion should auto-wake from sleep when touch press occurs.
+   * @param auto_wake True or false. When auto_wake is true and Nextion is in sleep mode,
+   * the first touch will only trigger the auto wake mode and not trigger a Touch Event.
+   *
+   * Example:
+   * ```cpp
+   * it.set_auto_wake_on_touch(true);
+   * ```
+   *
+   * The display will wake up by touch.
+   */
+  void set_auto_wake_on_touch(bool auto_wake);
+
+  /**
+   * Sets Nextion mode between sleep and awake
+   * @param True or false. Sleep=true to enter sleep mode or sleep=false to exit sleep mode.
+   */
+  void sleep(bool sleep);
 
   // ========== INTERNAL METHODS ==========
   // (In most use cases you won't need these)
   void register_touch_component(NextionTouchComponent *obj) { this->touch_.push_back(obj); }
+  void register_multi_touch_component(MultiNextionTouchComponent *obj) { this->multi_touch_ = obj; }
   void setup() override;
   void set_brightness(float brightness) { this->brightness_ = brightness; }
   float get_setup_priority() const override;
@@ -391,9 +426,23 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
   bool read_until_ack_();
 
   std::vector<NextionTouchComponent *> touch_;
+  MultiNextionTouchComponent *multi_touch_;
   optional<nextion_writer_t> writer_;
   bool wait_for_ack_{true};
   float brightness_{1.0};
+
+  public:
+  uint8_t page_id;
+  uint32_t val;
+};
+
+class MultiNextionTouchComponent : public sensor::Sensor{
+ public:
+  void set_page_id(uint8_t page_id) { page_id_ = page_id; }
+  void process(uint8_t page_id, uint8_t component_id, bool on);
+
+ protected:
+  uint8_t page_id_;
 };
 
 class NextionTouchComponent : public binary_sensor::BinarySensorInitiallyOff {
